@@ -1,3 +1,5 @@
+package recipes;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -5,7 +7,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/recipe")
@@ -35,8 +39,20 @@ public class RecipeController {
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getRecipe(@PathVariable Long id) {
-        Optional<Recipe> recipe = recipeRepository.findById(id);
-        return recipe.map(ResponseEntity::ok).orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        Optional<Recipe> recipeOpt = recipeRepository.findById(id);
+        if (recipeOpt.isPresent()) {
+            Recipe recipe = recipeOpt.get();
+            RecipeResponseDTO responseDTO = new RecipeResponseDTO();
+            responseDTO.setName(recipe.getName());
+            responseDTO.setCategory(recipe.getCategory());
+            responseDTO.setDescription(recipe.getDescription());
+            responseDTO.setIngredients(recipe.getIngredients());
+            responseDTO.setDirections(recipe.getDirections());
+            responseDTO.setDate(recipe.getDate());
+            return new ResponseEntity<>(responseDTO, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
     @DeleteMapping("/{id}")
@@ -87,6 +103,17 @@ public class RecipeController {
             recipes = recipeRepository.findByNameContainingIgnoreCaseOrderByDateDesc(name);
         }
 
-        return new ResponseEntity<>(recipes, HttpStatus.OK);
+        List<RecipeResponseDTO> responseDTOs = recipes.stream().map(recipe -> {
+            RecipeResponseDTO dto = new RecipeResponseDTO();
+            dto.setName(recipe.getName());
+            dto.setCategory(recipe.getCategory());
+            dto.setDescription(recipe.getDescription());
+            dto.setIngredients(recipe.getIngredients());
+            dto.setDirections(recipe.getDirections());
+            dto.setDate(recipe.getDate());
+            return dto;
+        }).collect(Collectors.toList());
+
+        return new ResponseEntity<>(responseDTOs, HttpStatus.OK);
     }
 }

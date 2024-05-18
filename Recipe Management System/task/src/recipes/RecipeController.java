@@ -116,4 +116,11 @@ public class RecipeController {
 
         return new ResponseEntity<>(responseDTOs, HttpStatus.OK);
     }
+
+    // Add an endpoint to delete all recipes
+    @DeleteMapping("/all")
+    public ResponseEntity<?> deleteAllRecipes() {
+        recipeRepository.deleteAll();
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
 }
